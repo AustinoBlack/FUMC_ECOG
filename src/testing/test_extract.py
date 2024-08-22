@@ -1,6 +1,6 @@
 from pptx import Presentation
 
-prs = Presentation("test_slides.pptx")
+prs = Presentation("../assets/test_slides.pptx")
 
 # text_runs will be populated with a list of strings,
 # one for each text run in presentation
