@@ -6,6 +6,9 @@ prs = Presentation("../../assets/test_slides.pptx")
 # one for each text run in presentation
 text_runs = []
 
+grouped_triggers = ['UMH', 'FWS', 'Scripture Reading', 'Prayer for Illumination', "The Lord’s Prayer"]
+standalone_triggers = ['Passing of the Peace', 'Rev.', 'Prelude', 'Postlude', 'The Children’s Moment', 'Offering Our Gifts', 'Offertory', 'Sending Forth', 'Proclamation of God’s Word']
+
 i=1
 for slide in prs.slides:
     text_runs.append(i)
@@ -18,8 +21,10 @@ for slide in prs.slides:
         for paragraph in shape.text_frame.paragraphs:
             for run in paragraph.runs:
                 text = ''.join( run.text.strip() ) + ' '
-                if text.find('UMH') != -1 or text.find('FWS') != -1 or text.find('Scripture Reading') != -1 or text.find('Prayer for Illumination') != -1 or text.find("The Lord’s Prayer") != -1:
-                    text_runs.append('Grouped: ')
+                if any( substr in text for substr in grouped_triggers) == True:
+                    text_runs.append('Grouped: ') 
+                if any( substr in text for substr in standalone_triggers) == True:
+                    text_runs.append('Standalone: ')
                 if text != '':
                     cleaned_text += text
     text_runs.append(cleaned_text.lstrip())
