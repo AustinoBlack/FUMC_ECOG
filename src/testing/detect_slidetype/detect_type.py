@@ -10,8 +10,10 @@ grouped_triggers = ['UMH', 'FWS', 'Scripture Reading', 'Prayer for Illumination'
 standalone_triggers = ['Passing of the Peace', 'Rev.', 'Prelude', 'Postlude', 'The Children’s Moment', 'Offering Our Gifts', 'Offertory', 'Sending Forth', 'Proclamation of God’s Word']
 
 i=1
+Flag = "Standalone"
 for slide in prs.slides:
-    text_runs.append(i)
+    data = []
+    data.append(i)
     i+=1
     cleaned_text = ""
     for shape in slide.shapes:
@@ -22,12 +24,14 @@ for slide in prs.slides:
             for run in paragraph.runs:
                 text = ''.join( run.text.strip() ) + ' '
                 if any( substr in text for substr in grouped_triggers) == True:
-                    text_runs.append('Grouped: ') 
+                    Flag = "Grouped"
                 if any( substr in text for substr in standalone_triggers) == True:
-                    text_runs.append('Standalone: ')
+                    Flag = "Standalone"
                 if text != '':
                     cleaned_text += text
-    text_runs.append(cleaned_text.lstrip())
+    data.append(Flag)
+    data.append(cleaned_text)
+    text_runs.append(data)
                      
 for run in text_runs:
     print( run )
