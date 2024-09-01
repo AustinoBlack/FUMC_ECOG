@@ -8,6 +8,55 @@ import sys
 Grouped_Triggers = ['UMH', 'FWS', 'Scripture Reading', 'Prayer for Illumination', "The Lord’s Prayer"] 
 Standalone_Triggers = ['Passing of the Peace', 'Rev.', 'Prelude', 'Postlude', 'The Children’s Moment', 'Offering Our Gifts', 'Offertory', 'Sending Forth', 'Proclamation of God’s Word'] 
 
+def create_slide( prs, layout, category, content ):
+    ''' create_slide creates a slide in a given format, with a given layout, using a given conent string, and adds it to a given presentation object'''
+    slide = prs.slides.add_slide(layout)
+
+    slide.background.fill.solid()
+    slide.background.fill.fore_color.rgb = RGBColor(0, 255, 0)
+
+    logo_img = 'assets/CrossFlame_WhiteRed.png'
+    textbox_img = 'assets/text_plate.png'
+    
+    # add text plate
+    X = Inches(1.5)
+    Y = Inches(6.5)
+    height = Inches(2.5)
+    width = Inches(14.5)
+    textbox = slide.shapes.add_picture(textbox_img, X, Y, width=width, height=height)
+
+    # add logo
+    X = Inches(-1.25)
+    Y = Inches(6.5)
+    height = Inches(2.5)
+    logo = slide.shapes.add_picture(logo_img, X, Y, height=height)
+
+    # add text
+    X = Inches(1.5)
+    Y = Inches(6.5)
+    height = Inches(2.5)
+    width = Inches(14.5)
+    text_box = slide.shapes.add_textbox(X, Y, width, height)
+    text_frame = text_box.text_frame
+    text_frame.auto_size = None
+    text_frame.word_wrap = True
+    text_frame.text = content
+
+    # Center the text horizontally in the text box
+    text = text_frame.paragraphs[0]  # Access the first paragraph (text content)
+    text.alignment = PP_ALIGN.CENTER  # Center the text horizontally
+
+    # Center the text vertically in the text box
+    text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE  # Center the text vertically
+
+    font = text.font
+    font.name = 'Arial'  # Set font name
+    if category == "Standalone":
+        font.size = Pt(40)
+        font.bold = True
+    elif category == "Grouped":
+        font.size = Pt(24)
+
 def extract_data( prs ):
     '''extract_data takes a given Presentation object and returns a list of lists containing the slide number, slide "type", and slide content of that object'''
     data = []
@@ -35,7 +84,7 @@ def extract_data( prs ):
                     if raw_text != '':
                         cleaned_text += raw_text
         raw_data.append( Flag )
-        raw_data.append( cleaned_text )
+        raw_data.append( cleaned_text.lstrip() )
         data.append( raw_data )
         slide_no += 1
 
@@ -55,14 +104,21 @@ def Main():
             print( "Error: expected .pptx file" )
             exit( 1 )
         else:
-            presentation = Presentation( file_path )
+            template = Presentation( file_path )
+            presentation = Presentation()
             presentation.slide_width = Inches(16)  # Width in inches
             presentation.slide_height = Inches(9)  # Height in inches
             blank_slide_layout = presentation.slide_layouts[6]
             
-            data = extract_data( presentation )
+            data = extract_data( template )
             for raw_data in data:
-                print( raw_data )
+                slide_no = raw_data[0]
+                slide_type = raw_data[1]
+                slide_content = raw_data[2]
 
+                create_slide( presentation, blank_slide_layout, slide_type, slide_content )
+            
+            presentation.save( 'trial.pptx' )        
+        
 if __name__ == "__main__":
     Main()
