@@ -3,10 +3,25 @@ from pptx.dml.color import ColorFormat, RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.util import Inches, Pt
+import os
 import sys
+import time
+import datetime
 
 Grouped_Triggers = ['UMH', 'FWS', 'Scripture Reading', 'Prayer for Illumination', "The Lord’s Prayer"] 
 Standalone_Triggers = ['Passing of the Peace', 'Rev.', 'Prelude', 'Postlude', 'The Children’s Moment', 'Offering Our Gifts', 'Offertory', 'Sending Forth', 'Proclamation of God’s Word'] 
+
+def get_sunday_date():
+    today = datetime.date.today()
+    weekday = today.weekday()  # 0 = Monday, 6 = Sunday
+
+    # Calculate days until next Sunday
+    days_to_sunday = 6 - weekday
+
+    # Get Sunday's date
+    sunday_date = today + datetime.timedelta(days=days_to_sunday)
+
+    return sunday_date
 
 def create_slide( prs, layout, category, content ):
     ''' create_slide creates a slide in a given format, with a given layout, using a given conent string, and adds it to a given presentation object'''
@@ -55,7 +70,8 @@ def create_slide( prs, layout, category, content ):
         font.size = Pt(40)
         font.bold = True
     elif category == "Grouped":
-        font.size = Pt(24)
+        font.size = Pt(32)
+        font.bold = True
 
 def extract_data( prs ):
     '''extract_data takes a given Presentation object and returns a list of lists containing the slide number, slide "type", and slide content of that object'''
@@ -87,7 +103,7 @@ def extract_data( prs ):
         raw_data.append( cleaned_text.lstrip() )
         data.append( raw_data )
         slide_no += 1
-
+    
     return data
 
 def Main():
@@ -117,8 +133,15 @@ def Main():
                 slide_content = raw_data[2]
 
                 create_slide( presentation, blank_slide_layout, slide_type, slide_content )
-            
-            presentation.save( 'trial.pptx' )        
         
+        date = get_sunday_date()
+        os.makedirs(str(date))
+        os.chdir(str(date))
+        presentation.save( str(sys.argv[1])[:-5] + '-LT.pptx' )
+
 if __name__ == "__main__":
+    start_time = time.time()
+    print("...Creating Lower Thirds...")
     Main()
+    print("Lower Thirds creation complete!")
+    print("Completed in --- %.5f seconds ---" % (time.time() - start_time))
