@@ -1,0 +1,176 @@
+Sub FUMC_ECOG_APPLY_ANIMATIONS()
+    Dim filePath As String
+    Dim sildeNum As Integer
+    Dim transitionType As Integer
+    Dim nexttransitionType As Integer
+    Dim currentSlide As slide
+    Dim fso As Object
+    Dim file As Object
+    Dim line As String
+    Dim inSequence As Boolean
+    
+    ' Path to input file (should always be the same)
+    filePath = "C:\Users\AustinBlack-EXT\Desktop\FUMC\2024-11-10\ECOG_input.txt"
+    
+    ' Open the file
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set file = fso.OpenTextFile(filePath, 1)
+    
+    ' Initialize sequence variables
+    slideNum = 1
+    previousType = 0
+    inSequence = False
+    endSlide = 0
+    
+    ' Read first line in the file
+    If Not file.AtEndOfStream Then
+        line = file.ReadLine
+        transitionType = CInt(line)
+        'Debug.Print ("current: " + Str(transitionType))
+    End If
+    
+    
+    ' Loop through input file
+    Do While Not file.AtEndOfStream
+        'Debug.Print ("SLIDE: " + Str(slideNum))
+        ' Lookahead
+        line = file.ReadLine
+        nexttransitionType = CInt(line)
+        
+        ' Check if slide exists
+        If slideNum <= ActivePresentation.Slides.Count Then
+            Set currentSlide = ActivePresentation.Slides(slideNum)
+            
+            ' Apply animation to slide based on what kind of slide it is
+            Select Case transitionType
+                Case 0:
+                    inSequence = False
+                    'Debug.Print "fly up, then fly down animation"
+                    ApplyAnimations currentSlide, transitionType
+                Case 1:
+                    inSequence = True
+                    currentSlide.SlideShowTransition.EntryEffect = ppEffectFadeSmoothly
+                    currentSlide.SlideShowTransition.Speed = ppTransitionSpeedMedium
+                    'Debug.Print "fly up animation"
+                    ApplyAnimations currentSlide, transitionType
+                Case Else
+                    'Debug.Print "skip animation"
+                    currentSlide.SlideShowTransition.EntryEffect = ppEffectFadeSmoothly
+                    currentSlide.SlideShowTransition.Speed = ppTransitionSpeedMedium
+                    If Not inSequence Then
+                        inSequence = True
+                    End If
+            End Select
+            
+            ' Check if current slide is the end of a sequence (if next slide type is 0 or 1)
+            If inSequence And (nexttransitionType = 0 Or nexttransitionType = 1) Then
+                'Debug.Print "fly down animation"
+                ApplyAnimations currentSlide, 9
+                inSequence = False
+            End If
+        End If
+        
+        ' Move to next slide
+        slideNum = slideNum + 1
+        transitionType = nexttransitionType
+        'Debug.Print ("current: " + Str(transitionType))
+    Loop
+    
+    ' Weird edge case check
+    If inSequence And slideNum <= ActivePresentation.Slides.Count Then
+       Set currentSlide = ActivePresentstion.Slides(slideNum - 1)
+       'Debug.Print "fly down animation"
+       ApplyAnimations currentSlide, 9
+    End If
+    
+    'final slide animation
+    Set currentSlide = ActivePresentation.Slides(ActivePresentation.Slides.Count)
+    'Debug.Print ("SLIDE: " + Str(slideNum))
+    'Debug.Print "fly up, then fly down animation"
+    ApplyAnimations currentSlide, 0
+    ' Close the file
+    file.Close
+    
+    ' Complete pop-up
+    MsgBox "Animations Applied Successfully!" & vbCrLf & "Please check over presentation to make sure everything looks right :)"
+End Sub
+
+Sub ApplyAnimations(slide As slide, transitionType As Integer)
+    Dim shape As shape
+    Dim Appear As effect
+    Dim Disappear As effect
+    Dim textPlate As shape
+    Dim motion As AnimationBehavior
+    Dim textBox As shape
+    Dim imgCount As Integer
+    Dim i As Integer
+    
+    ' Initialize Variables
+    imgCount = 0
+    Set textPlate = Nothing
+    Set textBox = Nothing
+    
+    ' Loop through each shape in the current slide
+    For Each shape In slide.Shapes
+        ' Find textPlate
+        If shape.Type = msoPicture Then
+            imgCount = imgCount + 1
+            
+            If imgCount = 2 Then
+                ' Apply animations to text box and tex plate
+                GoTo NextShape
+                
+            ElseIf imgCount = 1 Then
+                Set secondImage = shape
+                
+            End If
+            
+        ElseIf shape.HasTextFrame Then
+            If shape.TextFrame.HasText Then
+                Set textBox = shape
+            End If
+        End If
+        
+    
+NextShape:
+        Next shape
+        
+        If Not secondImage Is Nothing And Not textBox Is Nothing Then
+            Select Case transitionType
+                ' Apply Full Animations
+                Case 0:
+                    Set Appear = slide.TimeLine.MainSequence.AddEffect(secondImage, msoAnimEffectFly, , msoAnimTriggerOnPageClick)
+                    Appear.Timing.TriggerDelayTime = 0
+                    
+                    Set Appear = slide.TimeLine.MainSequence.AddEffect(textBox, msoAnimEffectFly, , msoAnimTriggerWithPrevious)
+                    Appear.Timing.TriggerDelayTime = 0
+                    
+                    Set Disappear = slide.TimeLine.MainSequence.AddEffect(secondImage, msoAnimEffectFly, , msoAnimTriggerOnPageClick)
+                    Disappear.Exit = msoTrue
+                    Disappear.Timing.TriggerDelayTime = 0
+                    
+                    Set Disappear = slide.TimeLine.MainSequence.AddEffect(textBox, msoAnimEffectFly, , msoAnimTriggerWithPrevious)
+                    Disappear.Exit = msoTrue
+                    Disappear.Timing.TriggerDelayTime = 0
+                
+                ' Apply Only Fly Up Animations
+                Case 1:
+                    Set Appear = slide.TimeLine.MainSequence.AddEffect(secondImage, msoAnimEffectFly, , msoAnimTriggerOnPageClick)
+                    Appear.Timing.TriggerDelayTime = 0
+                    
+                    Set Appear = slide.TimeLine.MainSequence.AddEffect(textBox, msoAnimEffectFly, , msoAnimTriggerWithPrevious)
+                    Appear.Timing.TriggerDelayTime = 0
+                
+                ' Apply Only Fly Out Animations
+                Case 9:
+                    Set Disappear = slide.TimeLine.MainSequence.AddEffect(secondImage, msoAnimEffectFly, , msoAnimTriggerOnPageClick)
+                    Disappear.Exit = msoTrue
+                    Disappear.Timing.TriggerDelayTime = 0
+                    
+                    Set Disappear = slide.TimeLine.MainSequence.AddEffect(textBox, msoAnimEffectFly, , msoAnimTriggerWithPrevious)
+                    Disappear.Exit = msoTrue
+                    Disappear.Timing.TriggerDelayTime = 0
+            
+            End Select
+        End If
+End Sub
