@@ -4,12 +4,13 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.util import Inches, Pt
 import os
+import shutil
 import sys
 import time
 import datetime
 
-Grouped_Triggers = ['UMH', 'FWS', 'Scripture Reading', 'Prayer for Illumination', "The Lord’s Prayer"] 
-Standalone_Triggers = ['Passing of the Peace', 'Rev.', 'Prelude', 'Postlude', 'The Children’s Moment', 'Offering Our Gifts', 'Offertory', 'Sending Forth', 'Proclamation of God’s Word'] 
+Grouped_Triggers = ['umh', 'fws', 'scripture reading', 'prayer for illumination', "the lord’s prayer", "call to worship", "affirmation of faith"] 
+Standalone_Triggers = ['passing of the peace', 'rev.', 'prelude', 'postlude', 'the children’s moment', 'offering our gifts', 'offertory', 'sending forth', 'proclamation of god’s word', 'benediction'] 
 
 def get_sunday_date():
     today = datetime.date.today()
@@ -30,8 +31,8 @@ def create_slide( prs, layout, category, content ):
     slide.background.fill.solid()
     slide.background.fill.fore_color.rgb = RGBColor(0, 255, 0)
 
-    logo_img = 'assets/CrossFlame_WhiteRed.png'
-    textbox_img = 'assets/text_plate.png'
+    logo_img = '../assets/CrossFlame_WhiteRed.png'
+    textbox_img = '../assets/text_plate.png'
     
     # add text plate
     X = Inches(1.5)
@@ -79,6 +80,9 @@ def extract_data( prs ):
     Flag = "Standalone"
     slide_no = 1
 
+    counter = 0
+    in_sequence = False
+
     for slide in prs.slides:
         
         raw_data = []
@@ -93,17 +97,35 @@ def extract_data( prs ):
             for paragraph in shape.text_frame.paragraphs:
                 for run in paragraph.runs:
                     raw_text = ''.join( run.text.strip() ) + ' '
-                    if any( substr in raw_text for substr in Grouped_Triggers) == True:
+                    if any( substr in raw_text.lower() for substr in Grouped_Triggers) == True:
                         Flag = "Grouped"
-                    if any( substr in raw_text for substr in Standalone_Triggers) == True:
+                        in_sequence == True
+                        counter = 0
+                    if any( substr in raw_text.lower() for substr in Standalone_Triggers) == True:
                         Flag = "Standalone"
+                        counter = 0
+                        in_sequence == False
                     if raw_text != '':
                         cleaned_text += raw_text
+
+        if Flag == "Grouped":
+            counter += 1
+        else:
+            in_sequence = False
+            counter = 0
+        #print( Flag )
+        #print( in_sequence)
+        #print( counter )
+
         raw_data.append( Flag )
         raw_data.append( cleaned_text.lstrip() )
         data.append( raw_data )
         slide_no += 1
-    
+
+        with open("ECOG_Input.txt", "a") as f:
+            f.write(str(counter)+"\n")
+        f.close()
+
     return data
 
 def Main():
@@ -126,17 +148,19 @@ def Main():
             presentation.slide_height = Inches(9)  # Height in inches
             blank_slide_layout = presentation.slide_layouts[6]
             
+            date = get_sunday_date()
+            os.makedirs(str(date))
+            shutil.copy(file_path, str(date))
+            os.chdir(str(date))
             data = extract_data( template )
+
             for raw_data in data:
                 slide_no = raw_data[0]
                 slide_type = raw_data[1]
                 slide_content = raw_data[2]
 
                 create_slide( presentation, blank_slide_layout, slide_type, slide_content )
-        
-        date = get_sunday_date()
-        os.makedirs(str(date))
-        os.chdir(str(date))
+
         presentation.save( str(sys.argv[1])[:-5] + '-LT.pptx' )
 
 if __name__ == "__main__":
