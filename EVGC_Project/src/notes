@@ -1,0 +1,10 @@
+CI/CD SETUP
+tests are run on code in docker container
+
+docker build in build job, docker run in test job
+
+yml file should be in main branch
+
+make credentials for runners to access git with
+	put ssh key in a variable in the gitlab-ci file
+        pass key to docker container with -e

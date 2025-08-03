@@ -1,0 +1,30 @@
+# debian 11 so we have python 3.9
+FROM debian:11
+
+# installer doesn't get stuck at y/n prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# update container & install needed libraries & tools (and vim mostly importantly)
+RUN apt-get update && apt-get install -y \
+      python3 python3-pip python3-virtualenv vim git libreoffice imagemagick curl
+
+# set up python virtual environment to install needed libraries
+RUN python3 -m virtualenv /env/bin/python3
+RUN pip install python-pptx
+RUN pip install python-pptx-interface
+RUN pip install pptx-tools
+RUN pip install flask
+
+# pass Docker image an SSH key for git access
+RUN mkdir -p -m 0700 /root/.ssh && ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+COPY id_rsa root/.ssh/
+RUN chmod 600 root/.ssh/id_rsa
+
+#clone git repo into image
+RUN git clone git@gitlab.com:longwood1/vidscript/evgp-project.git evgp
+WORKDIR evgp/
+
+# set defaults so git doesn't ask for them in the container
+RUN git config pull.rebase false
+RUN git config --global user.email "docker@docker.com"
+RUN git config --global user.name "Docker Image"

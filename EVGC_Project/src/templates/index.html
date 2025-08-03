@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="theme-color" content="#4f46e5" />
+    <title>PowerPoint Processor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Your PowerPoint File</h1>
+
+        {% if uploaded_filename %}
+        <div class="upload-banner">
+            <p>
+                <strong>Using existing file:</strong> {{ uploaded_filename }}
+                <a href="{{ url_for('clear_session') }}">Upload a different file</a>
+            </p>
+        </div>
+        {% endif %}
+
+        <form action="/" method="post" enctype="multipart/form-data">
+            <!-- PowerPoint File Input -->
+            <div class="file-input-container">
+                <label for="file" class="file-label">Choose PowerPoint File</label>
+                <input type="file" id="file" name="file" accept=".pptx" />
+            </div>
+
+            <!-- Icon File Input -->
+            <div class="file-input-container">
+                <label for="icon" class="file-label">Upload Icon (Optional)</label>
+                <input type="file" id="icon" name="icon" accept="image/*" />
+            </div>
+
+            <!-- Background Options -->
+            <div class="checkboxes">
+                <div>
+                    <input type="checkbox" id="color" name="background" value="Color"/>
+                    <label for="color">Background Color</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="image" name="background" value="Image"/>
+                    <label for="image">Background Image</label>
+                </div>
+            </div>
+
+            <!-- Background Color Dropdown -->
+            <div class="dropdown" id="color-picker" style="display: none;">
+                <label for="bg-color">Background Color:</label>
+                <select id="bg-color" name="bg_color">
+                    <option value="green" selected>Green</option>
+                    <option value="white">White</option>
+                    <option value="lightgray">Light Gray</option>
+                    <option value="black">Black</option>
+                    <option value="beige">Beige</option>
+                    <option value="blue">Blue</option>
+                    <option value="red">Red</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="orange">Orange</option>
+                    <option value="purple">Purple</option>
+                    <option value="teal">Teal</option>
+                    <option value="navy">Navy</option>
+                    <option value="gray">Gray</option>
+                    <option value="pink">Pink</option>
+                </select>
+            </div>
+
+            <!-- Background Image Upload -->
+            <div class="file-input-container" id="bg-image-upload" style="display: none;">
+                <label for="bg-image" class="file-label">Upload Background Image:</label>
+                <input type="file" id="bg-image" name="bg_image" accept="image/*" />
+            </div>
+
+            <!-- Font Style -->
+            <div class="dropdown">
+                <label for="font-family">Font Style:</label>
+                <select id="font-family" name="font_family">
+                    <option value="Arial">Arial</option>
+                    <option value="'Times New Roman', serif">Times New Roman</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Georgia">Georgia</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit">Generate PowerPoint</button>
+
+            <!-- Spinner -->
+            <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px;">
+                <div class="spinner"></div>
+                <p>Generating your PowerPoint...</p>
+            </div>
+        </form>
+
+        {% if download %}
+        <div class="download-box">
+            <p>Processing complete!</p>
+            <a href="{{ url_for('download_file', sunday_folder=sunday_folder) }}">
+                <button class="download-btn">Download your PowerPoint</button>
+            </a>
+        </div>
+
+        <div class="preview">
+            <h2>Preview Slides</h2>
+            {% for slide in preview_images %}
+            <img src="{{ url_for('preview_file', filename=preview_folder + '/' + slide) }}" alt="Slide Preview" />
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>Powered by Flask and Python</p>
+        </div>
+    </div>
+
+    <script>
+        const colorCheckbox = document.getElementById('color');
+        const imageCheckbox = document.getElementById('image');
+        const colorPicker = document.getElementById('color-picker');
+        const imageUpload = document.getElementById('bg-image-upload');
+        const form = document.querySelector('form');
+        const spinner = document.getElementById('loading-spinner');
+
+        function updateBackgroundOptions() {
+            if (colorCheckbox.checked) {
+                imageCheckbox.checked = false;
+                colorPicker.style.display = 'block';
+                imageUpload.style.display = 'none';
+            } else if (imageCheckbox.checked) {
+                colorCheckbox.checked = false;
+                colorPicker.style.display = 'none';
+                imageUpload.style.display = 'block';
+            } else {
+                colorPicker.style.display = 'none';
+                imageUpload.style.display = 'none';
+            }
+        }
+
+        colorCheckbox.addEventListener('change', updateBackgroundOptions);
+        imageCheckbox.addEventListener('change', updateBackgroundOptions);
+
+        form.addEventListener('submit', function () {
+            spinner.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
+

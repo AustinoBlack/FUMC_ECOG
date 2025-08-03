@@ -10,7 +10,7 @@ Sub FUMC_ECOG_APPLY_ANIMATIONS()
     Dim inSequence As Boolean
     
     ' Path to input file (should always be the same)
-    filePath = "C:\Users\AustinBlack-EXT\Desktop\FUMC\2024-11-10\ECOG_input.txt"
+    filePath = "C:\Users\AustinBlack-EXT\Desktop\FUMC\[insert date here]\ECOG_input.txt"
     
     ' Open the file
     Set fso = CreateObject("Scripting.FileSystemObject")

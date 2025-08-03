@@ -152,6 +152,15 @@ def Main():
             os.makedirs(str(date))
             shutil.copy(file_path, str(date))
             os.chdir(str(date))
+
+            macro_file = '../assets/ECOG_macro.txt'
+            with open( macro_file, "r" ) as f:
+                content = f.read()
+            content = content.replace( "[insert date here]", str(date))
+            output = f"ECOG_macro.txt"
+            with open( output, "w" ) as f:
+                f.write(content)
+
             data = extract_data( template )
 
             for raw_data in data:
