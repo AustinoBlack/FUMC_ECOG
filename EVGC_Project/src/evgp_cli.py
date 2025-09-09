@@ -64,8 +64,18 @@ def insert_icon(slide, bar_top, icon_path):
 def insert_text(slide, bar_top, slide_width, text, font_name):
     text_left = Inches(2)
     text_top = bar_top + Inches(0.25)
-    textbox = slide.shapes.add_textbox(left=text_left, top=text_top, width=Inches(6), height=Inches(1))
+    textbox = slide.shapes.add_textbox(left=text_left, top=text_top, width=Inches(14.5), height=Inches(2.5))
     text_frame = textbox.text_frame
+    text_frame.auto_size = None
+    text_frame.word_wrap = True
+
+    # Center Horizontally
+    text = text_frame.paragraphs[0]
+    text.alignment = PP_ALIGN.CENTER
+
+    # Center Vertically
+    text_fram.vertical_anchor = MSO_ANCHOR.MIDDLE
+
     p = text_frame.add_paragraph()
     p.text = text
     p.font.size = Pt(32)
